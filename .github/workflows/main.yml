@@ -1,1 +1,51 @@
+name: Build KARIMOK STAR APK
 
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'KARIMOK-STAR.zip'
+      - '.github/workflows/android.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: دریافت کد
+        uses: actions/checkout@v4
+
+      - name: نصب Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: نصب Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: نصب Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: استخراج پروژه
+        run: unzip -q KARIMOK-STAR.zip
+
+      - name: نصب وابستگی‌ها
+        working-directory: KARIMOK-STAR
+        run: |
+          npm ci
+          npx cap sync android
+
+      - name: ساخت APK
+        working-directory: KARIMOK-STAR/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: ذخیره فایل APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KARIMOK-STAR-APK
+          path: KARIMOK-STAR/android/app/build/outputs/apk/debug/app-debug.apk
